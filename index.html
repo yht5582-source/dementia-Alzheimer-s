@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="失智症認知量表計分（MMSE／MoCA）、NIA-AA 診斷檢核與 APA 精神行為症狀 (BPSD) 處置決策流程。">
+<title>失智症照護決策台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: clinical console — masthead + tabbed workspaces; BPSD tab = case strip, vertical decision map (left) + sticky plan summary (right) */
+:root{
+  --paper:#f4f4f7; --panel:#ffffff; --ink:#1b1c29; --ink-2:#4f5268; --ink-3:#7f8299; --line:#d8d9e3; --line-2:#ebecf1;
+  --accent:#4a3f98; --accent-ink:#ffffff; --accent-soft:#ebe8f7;
+  --go:#2d7a4c; --go-soft:#e2f1e7; --warn:#946708; --warn-soft:#faf0d9; --stop:#b23f2e; --stop-soft:#f8e4df;
+  --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#11121c; --panel:#191a27; --ink:#e7e7f0; --ink-2:#a9abc1; --ink-3:#7a7d95; --line:#2c2e42; --line-2:#222334;
+  --accent:#a99ef2; --accent-ink:#15122b; --accent-soft:#25223f;
+  --go:#65c48b; --go-soft:#162a1f; --warn:#e4b852; --warn-soft:#2d2612; --stop:#ee8b74; --stop-soft:#35201b; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#11121c; --panel:#191a27; --ink:#e7e7f0; --ink-2:#a9abc1; --ink-3:#7a7d95; --line:#2c2e42; --line-2:#222334;
+  --accent:#a99ef2; --accent-ink:#15122b; --accent-soft:#25223f;
+  --go:#65c48b; --go-soft:#162a1f; --warn:#e4b852; --warn-soft:#2d2612; --stop:#ee8b74; --stop-soft:#35201b; color-scheme:dark }
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:1220px;margin:0 auto;padding-inline:20px;padding-block:0 56px}
+@media (max-width:520px){.wrap{padding-inline:16px}}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:700;letter-spacing:.01em}
+h1{font-size:clamp(24px,3.2vw,32px);line-height:1.25}
+h3{font-size:16.5px}
+p{margin:0}
+.muted{color:var(--ink-2)} .small{font-size:13px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.masthead{padding-block:28px 0;display:grid;gap:8px}
+.masthead .sub{color:var(--ink-2);max-width:72ch}
+.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.src span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--ink-2);background:var(--panel)}
+.tabs{display:flex;gap:4px;margin-top:18px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{appearance:none;border:0;background:none;font:inherit;color:var(--ink-2);padding:10px 14px 11px;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;font-weight:500}
+.tab b{font-family:var(--f-mono);font-weight:500;color:var(--ink-3);margin-right:6px;font-size:13px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab[aria-selected="true"] b{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section.pane{padding-top:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.card>h3{margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stack{display:grid;gap:16px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.field{display:grid;gap:4px;min-width:0}
+.field>label,.flabel{font-size:12.5px;color:var(--ink-2);font-weight:500}
+input[type=number],input[type=date],select{font:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0;max-width:100%}
+input[type=number]{width:84px;font-family:var(--f-mono)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer;padding:5px 0}
+.check input{margin-top:5px;accent-color:var(--accent);flex:none}
+.btn{appearance:none;font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:6px 12px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--paper)}
+.seg button{appearance:none;border:0;background:transparent;font:inherit;font-size:13.5px;padding:4px 11px;border-radius:6px;color:var(--ink-2);cursor:pointer;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.seg.tri button[aria-pressed="true"][data-v="ok"]{background:var(--go-soft);color:var(--go);box-shadow:none}
+.seg.tri button[aria-pressed="true"][data-v="bad"]{background:var(--stop-soft);color:var(--stop);box-shadow:none}
+.pill{display:inline-block;font-size:11.5px;font-weight:500;border-radius:999px;padding:1px 9px;white-space:nowrap;vertical-align:1px}
+.pill.ev{background:var(--accent-soft);color:var(--accent)}
+.pill.go{background:var(--go-soft);color:var(--go)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.stop{background:var(--stop-soft);color:var(--stop)}
+.sample{font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:1px 10px;font-weight:500}
+.note{font-size:13px;color:var(--ink-2);border-left:3px solid var(--line);padding:4px 0 4px 12px}
+.alert{border-radius:8px;padding:10px 12px;font-size:14px;display:grid;gap:4px}
+.alert.warn{background:var(--warn-soft)} .alert.warn strong{color:var(--warn)}
+.alert.stop{background:var(--stop-soft)} .alert.stop strong{color:var(--stop)}
+.alert.go{background:var(--go-soft)} .alert.go strong{color:var(--go)}
+ul.plain{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip span{display:inline-block;font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer;background:var(--paper);color:var(--ink-2);user-select:none}
+.chip input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line-2);vertical-align:top}
+th{font-weight:500;color:var(--ink-2);font-size:12.5px;white-space:nowrap}
+.tablebox{overflow-x:auto}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* scales */
+.scale{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:18px;align-items:start}
+@media (max-width:900px){.scale{grid-template-columns:minmax(0,1fr)}}
+.dom{display:grid;grid-template-columns:minmax(0,1fr) auto 150px;gap:10px 14px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line-2)}
+.dom:last-child{border-bottom:0}
+@media (max-width:520px){.dom{grid-template-columns:minmax(0,1fr) auto}.dom .bar{grid-column:1/-1}}
+.dom .nm{font-size:14.5px}
+.dom .nm small{color:var(--ink-3);font-family:var(--f-mono);margin-left:6px}
+.step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--paper)}
+.step button{appearance:none;border:0;background:transparent;font:inherit;width:30px;height:32px;cursor:pointer;color:var(--ink-2);font-size:16px}
+.step button:hover{background:var(--accent-soft);color:var(--accent)}
+.step input{width:44px;border:0;border-inline:1px solid var(--line);border-radius:0;text-align:center;background:var(--panel);padding:5px 2px}
+.bar{height:8px;background:var(--line-2);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .2s}
+.bar.low i{background:var(--stop)}
+.total{display:flex;align-items:baseline;gap:8px;margin:6px 0}
+.total b{font-family:var(--f-mono);font-size:48px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.total span{font-family:var(--f-mono);color:var(--ink-3);font-size:18px}
+.gauge{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--stop-soft) 0 33%,var(--warn-soft) 33% 70%,var(--go-soft) 70%);margin:14px 0 22px}
+.gauge i{position:absolute;top:-4px;width:3px;height:18px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.gauge em{position:absolute;top:14px;font-style:normal;font-size:11px;color:var(--ink-3);font-family:var(--f-mono);transform:translateX(-50%)}
+.sticky{position:sticky;top:calc(12px + env(safe-area-inset-top,0px))}
+
+/* dx */
+.dx{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:18px;align-items:start}
+@media (max-width:960px){.dx{grid-template-columns:minmax(0,1fr)}}
+.verdict-big{font-family:var(--f-display);font-size:23px;line-height:1.3;margin:4px 0 6px}
+
+/* bpsd */
+.case{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end}
+.bpsd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,370px);gap:18px;align-items:start;margin-top:16px}
+@media (max-width:1000px){.bpsd{grid-template-columns:minmax(0,1fr)}}
+.map{display:grid;gap:0}
+.node{position:relative;padding-left:52px;padding-bottom:18px}
+.node::before{content:"";position:absolute;left:17px;top:38px;bottom:0;width:2px;background:var(--line)}
+.node:last-child::before{display:none}
+.node.done::before{background:var(--go)}
+.node .dot{position:absolute;left:0;top:10px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:14px;background:var(--panel);border:2px solid var(--line);color:var(--ink-3);z-index:1}
+.node.done .dot{border-color:var(--go);color:var(--go);background:var(--go-soft)}
+.node.active .dot{border-color:var(--accent);color:var(--accent-ink);background:var(--accent)}
+.node.blocked .dot{border-color:var(--stop);color:var(--stop);background:var(--stop-soft)}
+.node.idle .card{opacity:.8}
+.node-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
+.node-h h3{font-size:17px}
+.status{font-size:12.5px;font-weight:500}
+.acute{display:grid;gap:0}
+.acute .it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line-2)}
+.acute .it:last-child{border-bottom:0}
+.acute .it small{display:block;color:var(--ink-3);font-size:12.5px}
+@media (max-width:560px){.acute .it{grid-template-columns:minmax(0,1fr)}}
+.dice{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+@media (max-width:640px){.dice{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.dice div{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--paper)}
+.dice b{font-family:var(--f-display);font-size:18px;color:var(--accent);margin-right:6px}
+.dice span{font-size:13px;color:var(--ink-2)}
+.gate{display:grid;gap:6px;font-size:14px}
+.gate div{display:flex;gap:8px;align-items:flex-start}
+.gate i{font-style:normal;font-family:var(--f-mono);width:18px;flex:none;text-align:center;font-weight:500}
+.gate .y i{color:var(--go)} .gate .n i{color:var(--stop)}
+.rx{border-top:1px solid var(--line-2);padding-top:12px;margin-top:12px}
+.rx:first-child{border-top:0;padding-top:0;margin-top:0}
+.opt{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:9px 0 9px 12px;border-left:3px solid var(--line);margin-top:8px}
+.opt.first{border-left-color:var(--go)} .opt.alt{border-left-color:var(--accent)} .opt.avoid{border-left-color:var(--stop);opacity:.8}
+.opt .t{font-weight:700;font-size:14.5px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.opt .d{font-size:13.5px;color:var(--ink-2)}
+.opt .dose{font-family:var(--f-mono);font-size:12.5px;color:var(--ink)}
+.timeline{display:grid;gap:0}
+.tl{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--line-2)}
+.tl:last-child{border-bottom:0}
+.tl .when{font-family:var(--f-mono);font-size:12.5px;color:var(--accent)}
+.tl .when small{display:block;color:var(--ink-3)}
+.tl b{font-size:14px}
+.tl p{font-size:13.5px;color:var(--ink-2)}
+.path{display:grid;gap:6px;font-size:13.5px}
+.path div{display:flex;justify-content:space-between;gap:8px}
+.refs{padding-left:20px;margin:0;display:grid;gap:8px;font-size:13.8px}
+.refs a{color:var(--accent)}
+.refgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:860px){.refgrid{grid-template-columns:minmax(0,1fr)}}
+.disclaimer{margin-top:22px;font-size:13px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:14px;max-width:90ch}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);font-size:13.5px;padding:8px 16px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Dementia · Alzheimer's disease · BPSD decision support</div>
+    <h1>失智症照護決策台</h1>
+    <p class="sub">認知量表計分、NIA-AA 診斷檢核，以及依 APA 指引整理的精神行為症狀 (BPSD) 處置流程：先排除感染與疼痛等可逆原因，再進行非藥物介入，最後才評估抗精神病藥物的選擇、劑量與減量時程。</p>
+    <div class="src"><span>NIA-AA 2011 臨床診斷標準</span><span>Alzheimer's Association 2024 修訂標準</span><span>APA 抗精神病藥物用於失智症指引 2016</span><span>DICE 照護模式</span></div>
+    <nav class="tabs" role="tablist" aria-label="功能分頁">
+      <button class="tab" role="tab" id="tab-scale" aria-controls="scale" data-t="scale"><b>1</b>認知量表計分</button>
+      <button class="tab" role="tab" id="tab-dx" aria-controls="dx" data-t="dx"><b>2</b>診斷與分期</button>
+      <button class="tab" role="tab" id="tab-bpsd" aria-controls="bpsd" data-t="bpsd"><b>3</b>BPSD 處置流程</button>
+      <button class="tab" role="tab" id="tab-ref" aria-controls="ref" data-t="ref"><b>4</b>藥物速查與文獻</button>
+    </nav>
+  </header>
+
+  <!-- ============ 1. Scales ============ -->
+  <section class="pane" id="scale" role="tabpanel" aria-labelledby="tab-scale" hidden>
+    <div class="scale">
+      <div class="card">
+        <h3 style="justify-content:space-between">
+          <span class="seg" id="sc-type"><button data-v="mmse" aria-pressed="true">MMSE</button><button data-v="moca" aria-pressed="false">MoCA</button></span>
+          <span class="sample" id="sc-sample">示例分數</span>
+        </h3>
+        <div class="row" style="margin-bottom:6px">
+          <div class="field"><label for="sc-edu">受教育年數</label><div class="row" style="gap:6px"><input type="number" id="sc-edu" min="0" max="25" value="6"><span class="small muted">年</span></div></div>
+          <div class="field"><label for="sc-date">施測日期</label><input type="date" id="sc-date"></div>
+        </div>
+        <p class="small muted" style="margin-bottom:6px">請使用已取得授權的正式量表施測，再輸入各分項得分，系統會自動加總並判讀。本頁不重製量表題目。</p>
+        <div id="sc-doms"></div>
+        <div class="row" style="margin-top:12px"><button class="btn" id="sc-clear">全部歸零</button></div>
+      </div>
+      <aside class="card sticky" aria-live="polite">
+        <span class="eyebrow" id="sc-name">MMSE 總分</span>
+        <div class="total"><b id="sc-total">0</b><span>/ 30</span></div>
+        <div class="gauge" id="sc-gauge"></div>
+        <div id="sc-interp" class="stack" style="gap:8px"></div>
+        <div class="row" style="margin-top:12px"><button class="btn primary" id="sc-to-bpsd">帶入 BPSD 流程</button><button class="btn" id="sc-copy">複製結果</button></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 2. Diagnosis ============ -->
+  <section class="pane" id="dx" role="tabpanel" aria-labelledby="tab-dx" hidden>
+    <div class="dx">
+      <div class="stack">
+        <div class="card">
+          <h3>失智症核心條件 <span class="pill ev">NIA-AA 2011</span></h3>
+          <p class="small muted">認知或行為症狀需同時符合以下四項。</p>
+          <div id="dx-core"></div>
+        </div>
+        <div class="card">
+          <h3>受損認知領域 <span class="small muted" id="dx-dom-n"></span></h3>
+          <p class="small muted">至少兩個領域受損。</p>
+          <div id="dx-dom"></div>
+        </div>
+        <div class="card">
+          <h3>阿茲海默症特徵</h3>
+          <div id="dx-ad"></div>
+          <div class="field" style="margin-top:8px"><label for="dx-pres">最初且最明顯的缺損</label>
+            <select id="dx-pres"><option value="amn">記憶型（學習與回憶新資訊）</option><option value="lang">非記憶型：語言（找字困難）</option><option value="vis">非記憶型：視空間（物體失認、臉孔失認）</option><option value="exe">非記憶型：執行功能（推理、判斷）</option></select>
+          </div>
+          <div class="flabel" style="margin-top:12px">有以下證據時不診斷為「很可能」</div>
+          <div id="dx-ex"></div>
+          <div class="flabel" style="margin-top:12px">增加確定性</div>
+          <div id="dx-cert"></div>
+        </div>
+        <div class="card">
+          <h3>可逆因素與基本檢查</h3>
+          <div class="chips" id="dx-labs"></div>
+          <p class="small muted" style="margin-top:8px">已完成的項目點選標記。憂鬱、甲狀腺功能低下、維生素 B12 缺乏、梅毒、常壓性水腦症與藥物副作用都可能造成可逆的認知障礙。</p>
+        </div>
+      </div>
+      <aside class="card sticky" aria-live="polite">
+        <div class="row" style="justify-content:space-between"><span class="eyebrow">判讀結果</span><span class="sample" id="dx-sample">示例個案</span></div>
+        <div class="verdict-big" id="dx-verdict"></div>
+        <p class="small muted" id="dx-rule"></p>
+        <div class="field" style="margin-top:12px"><label for="dx-cdr">臨床失智評分量表 CDR 整體分數</label>
+          <select id="dx-cdr"><option value="">未評估</option><option value="0">0：正常</option><option value="0.5">0.5：可疑／極輕度</option><option value="1">1：輕度</option><option value="2">2：中度</option><option value="3">3：重度</option></select>
+        </div>
+        <div id="dx-stage" style="margin-top:10px"></div>
+        <div id="dx-next" style="margin-top:10px"></div>
+        <p class="note" style="margin-top:12px">Alzheimer's Association 2024 修訂標準以生物標記定義阿茲海默症（類澱粉 PET、腦脊髓液或血漿 p-tau217 等核心標記），並建議目前不對無症狀者做臨床診斷。考慮 anti-amyloid 單株抗體治療時，需確認類澱粉蛋白病理、ApoE 基因型並監測 ARIA，台灣核准與自費狀況請依最新資訊。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 3. BPSD ============ -->
+  <section class="pane" id="bpsd" role="tabpanel" aria-labelledby="tab-bpsd" hidden>
+    <div class="card">
+      <h3>個案資料 <span class="sample" id="b-sample">示例個案，請改成實際資料</span></h3>
+      <div class="case">
+        <div class="field"><label for="b-age">年齡</label><div class="row" style="gap:6px"><input type="number" id="b-age" min="40" max="110"><span class="small muted">歲</span></div></div>
+        <div class="field"><label for="b-type">失智症類型</label>
+          <select id="b-type"><option value="ad">阿茲海默症</option><option value="vad">血管性失智症</option><option value="mixed">混合型</option><option value="dlb">路易氏體失智症</option><option value="pdd">巴金森病失智症</option><option value="ftd">額顳葉失智症</option></select></div>
+        <div class="field"><label for="b-mmse">MMSE</label><div class="row" style="gap:6px"><input type="number" id="b-mmse" min="0" max="30"><span class="small muted" id="b-stage"></span></div></div>
+        <div class="field"><label for="b-start">介入起始日</label><input type="date" id="b-start"></div>
+      </div>
+      <div class="flabel" style="margin-top:12px">用藥風險因子</div>
+      <div class="chips" id="b-risks"></div>
+    </div>
+
+    <div class="bpsd">
+      <div class="map" id="map">
+        <!-- node 1 -->
+        <div class="node" id="n1"><div class="dot">1</div>
+          <div class="card">
+            <div class="node-h"><h3>界定目標症狀</h3><span class="status" id="s1"></span></div>
+            <div class="flabel">症狀（可複選）</div>
+            <div class="chips" id="b-sym" style="margin:6px 0 12px"></div>
+            <div class="row">
+              <div class="field"><span class="flabel">嚴重度</span><div class="seg" id="b-sev"><button data-v="1" aria-pressed="false">輕度</button><button data-v="2" aria-pressed="false">中度</button><button data-v="3" aria-pressed="false">重度</button></div></div>
+              <div class="field"><label for="b-ctx">常發生的情境</label><select id="b-ctx"><option value="none">無明顯規律</option><option value="care">照護時（洗澡、更衣、如廁）</option><option value="dusk">黃昏至傍晚</option><option value="night">夜間</option></select></div>
+            </div>
+            <div style="margin-top:8px">
+              <label class="check"><input type="checkbox" id="b-danger"><span>對自己或他人造成危險（攻擊、自傷、危及照護）</span></label>
+              <label class="check"><input type="checkbox" id="b-distress"><span>造成病人本身明顯痛苦</span></label>
+              <label class="check"><input type="checkbox" id="b-emerg"><span>立即危險，需要緊急處置</span></label>
+            </div>
+            <p class="small muted" style="margin-top:6px">以量化工具記錄症狀的類型、頻率、嚴重度與發生時間（如 NPI-Q、CMAI），做為之後判斷療效的基準。</p>
+          </div>
+        </div>
+        <!-- node 2 -->
+        <div class="node" id="n2"><div class="dot">2</div>
+          <div class="card">
+            <div class="node-h"><h3>排除急性與可逆原因</h3><span class="status" id="s2"></span></div>
+            <p class="small muted" style="margin-bottom:6px">行為改變常是身體不適的唯一表現。每一項標記為「正常」或「有問題」。</p>
+            <div class="row" style="margin-bottom:6px"><button class="btn" id="acute-all">其餘未評估者全部標為正常</button></div>
+            <div class="acute" id="acute"></div>
+            <div id="acute-out" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <!-- node 3 -->
+        <div class="node" id="n3"><div class="dot">3</div>
+          <div class="card">
+            <div class="node-h"><h3>非藥物介入</h3><span class="status" id="s3"></span></div>
+            <div class="dice">
+              <div><b>D</b><span>描述：誰、何時、何地、做了什麼</span></div>
+              <div><b>I</b><span>調查：病人、照顧者、環境因素</span></div>
+              <div><b>C</b><span>擬定：與照顧者共同訂計畫</span></div>
+              <div><b>E</b><span>評估：是否執行、是否有效</span></div>
+            </div>
+            <div id="np-list"></div>
+            <div class="field" style="margin-top:12px"><span class="flabel">非藥物介入執行狀況</span>
+              <div class="seg" id="b-np"><button data-v="none" aria-pressed="false">尚未開始</button><button data-v="ongoing" aria-pressed="false">進行中</button><button data-v="fail" aria-pressed="false">已執行但效果不足</button><button data-v="ok" aria-pressed="false">有效</button></div>
+            </div>
+          </div>
+        </div>
+        <!-- node 4 -->
+        <div class="node" id="n4"><div class="dot">4</div>
+          <div class="card">
+            <div class="node-h"><h3>是否需要藥物</h3><span class="status" id="s4"></span></div>
+            <div class="gate" id="gate"></div>
+            <div id="gate-out" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <!-- node 5 -->
+        <div class="node" id="n5"><div class="dot">5</div>
+          <div class="card">
+            <div class="node-h"><h3>藥物選擇與劑量</h3><span class="status" id="s5"></span></div>
+            <div id="rx"></div>
+          </div>
+        </div>
+        <!-- node 6 -->
+        <div class="node" id="n6"><div class="dot">6</div>
+          <div class="card">
+            <div class="node-h"><h3>監測與減量時程</h3><span class="status" id="s6"></span></div>
+            <div class="timeline" id="tl"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="stack sticky">
+        <div class="card">
+          <h3>目前路徑</h3>
+          <div class="path" id="path"></div>
+        </div>
+        <div class="card">
+          <h3>處置建議</h3>
+          <div id="plan"></div>
+          <div class="row" style="margin-top:12px"><button class="btn primary" id="b-copy">複製病歷摘要</button><button class="btn" id="b-reset">清除個案</button></div>
+        </div>
+        <div class="card">
+          <h3>APA 指引要點</h3>
+          <ul class="plain small">
+            <li>僅在症狀嚴重、具危險性或造成病人明顯痛苦時使用抗精神病藥物。</li>
+            <li>用藥前與病人或代理人討論風險與效益，包括死亡率上升的黑框警語。</li>
+            <li>從低劑量開始，逐步調到最低有效劑量。</li>
+            <li>適當劑量使用 4 週仍無明顯效果，應漸減並停藥。</li>
+            <li>有效者在 4 個月內嘗試漸減，除非過去減量時曾復發；減量期間至少每月評估。</li>
+            <li>除譫妄外，haloperidol 不做為第一線；非合併慢性精神病時不使用長效針劑。</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 4. Reference ============ -->
+  <section class="pane" id="ref" role="tabpanel" aria-labelledby="tab-ref" hidden>
+    <div class="stack">
+      <div class="card">
+        <h3>BPSD 常用藥物（高齡失智症劑量）</h3>
+        <div class="tablebox"><table id="drugtbl"><thead><tr><th>藥物</th><th>起始</th><th>常用／目標</th><th>上限</th><th>重點</th></tr></thead><tbody></tbody></table></div>
+        <p class="small muted" style="margin-top:8px">所有抗精神病藥物用於失智症長者皆有死亡率上升（約 1.6–1.7 倍）的黑框警語，並增加中風、跌倒與肺炎風險。劑量以仿單及院內處方集為準。</p>
+      </div>
+      <div class="refgrid">
+        <div class="card">
+          <h3>認知功能藥物</h3>
+          <div class="tablebox"><table><thead><tr><th>藥物</th><th>調整方式</th><th>注意</th></tr></thead><tbody>
+            <tr><td>Donepezil</td><td class="mono">5 mg 睡前 × 4–6 週 → 10 mg</td><td>心搏過慢、暈厥、腸胃不適、多夢</td></tr>
+            <tr><td>Rivastigmine 貼片</td><td class="mono">4.6 → 9.5 mg/24h（可至 13.3）</td><td>皮膚反應；口服劑型腸胃副作用較多</td></tr>
+            <tr><td>Galantamine ER</td><td class="mono">8 → 16 → 24 mg/日</td><td>每 4 週調升</td></tr>
+            <tr><td>Memantine</td><td class="mono">每週加 5 mg → 20 mg/日</td><td>CrCl &lt; 30：上限 10 mg/日；頭暈</td></tr>
+          </tbody></table></div>
+          <p class="small muted" style="margin-top:8px">健保給付條件以 MMSE 與 CDR 分期為依據，開立前請核對最新健保藥品給付規定。</p>
+        </div>
+        <div class="card">
+          <h3>路易氏體與巴金森病失智的特別注意</h3>
+          <ul class="plain">
+            <li>約半數對抗精神病藥物極度敏感，可能出現嚴重僵硬、意識混亂甚至死亡。</li>
+            <li>幻覺先以膽鹼酯酶抑制劑（rivastigmine、donepezil）治療。</li>
+            <li>必須使用時選 quetiapine 或 clozapine 低劑量；避免 haloperidol、risperidone、olanzapine。</li>
+          </ul>
+          <h3 style="margin-top:16px">額顳葉失智症</h3>
+          <ul class="plain">
+            <li>膽鹼酯酶抑制劑無效，且可能加重行為症狀。</li>
+            <li>去抑制、強迫行為可試 SSRI 或 trazodone。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <h3>參考文獻</h3>
+        <ol class="refs">
+          <li>McKhann GM, et al. The diagnosis of dementia due to Alzheimer's disease: recommendations from the National Institute on Aging–Alzheimer's Association workgroups. <i>Alzheimers Dement</i> 2011;7:263–269. <a href="https://doi.org/10.1016/j.jalz.2011.03.005" target="_blank" rel="noopener">doi:10.1016/j.jalz.2011.03.005</a></li>
+          <li>Jack CR Jr, et al. Revised criteria for diagnosis and staging of Alzheimer's disease: Alzheimer's Association Workgroup. <i>Alzheimers Dement</i> 2024;20:5143–5169.</li>
+          <li>Reus VI, et al. The American Psychiatric Association practice guideline on the use of antipsychotics to treat agitation or psychosis in patients with dementia. <i>Am J Psychiatry</i> 2016;173:543–546. <a href="https://doi.org/10.1176/appi.ajp.2015.173501" target="_blank" rel="noopener">doi:10.1176/appi.ajp.2015.173501</a></li>
+          <li>Kales HC, Gitlin LN, Lyketsos CG. Management of neuropsychiatric symptoms of dementia in clinical settings: recommendations from a multidisciplinary expert panel (DICE). <i>J Am Geriatr Soc</i> 2014;62:762–769.</li>
+          <li>Kales HC, Gitlin LN, Lyketsos CG. Assessment and management of behavioral and psychological symptoms of dementia. <i>BMJ</i> 2015;350:h369.</li>
+          <li>Husebo BS, et al. Efficacy of treating pain to reduce behavioural disturbances in residents of nursing homes with dementia: cluster randomised clinical trial. <i>BMJ</i> 2011;343:d4065.</li>
+          <li>Porsteinsson AP, et al. Effect of citalopram on agitation in Alzheimer disease: the CitAD randomized clinical trial. <i>JAMA</i> 2014;311:682–691.</li>
+          <li>Folstein MF, Folstein SE, McHugh PR. "Mini-mental state." <i>J Psychiatr Res</i> 1975;12:189–198.（MMSE 版權屬 PAR Inc.）</li>
+          <li>Nasreddine ZS, et al. The Montreal Cognitive Assessment, MoCA. <i>J Am Geriatr Soc</i> 2005;53:695–699.（使用需依 MoCA 官方授權與訓練規定）</li>
+          <li>台灣臨床失智症學會、台灣失智症協會相關指引與衛教資料（請以最新公告版本為準）。</li>
+        </ol>
+      </div>
+    </div>
+    <p class="disclaimer">本工具為臨床決策輔助與教學用途，不能取代醫師對個別病人的完整評估。量表判讀切點會因教育程度、語言版本與族群而不同；藥物劑量、禁忌與交互作用請以仿單及院內處方集為準。</p>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800);}
+function copyText(txt){const ok=()=>toast('已複製到剪貼簿');const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){toast('無法自動複製，請手動選取');}ta.remove();};try{navigator.clipboard.writeText(txt).then(ok,fb);}catch(e){fb();}}
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10);};
+const today=iso(new Date());
+function segBind(sel,cb){$$(sel+' button').forEach(b=>b.addEventListener('click',()=>{$$(sel+' button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));cb(b.dataset.v);}));}
+function segSet(sel,v){$$(sel+' button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===String(v)?'true':'false'));}
+
+/* ---------- tabs ---------- */
+const TABS=['scale','dx','bpsd','ref'];
+function showTab(id){TABS.forEach(t=>{$('#'+t).hidden=t!==id;$('#tab-'+t).setAttribute('aria-selected',t===id?'true':'false');});try{localStorage.setItem('dem-tab',id);}catch(e){}}
+$$('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.t)));
+
+/* ================= 1. Scales ================= */
+const SCALES={
+  mmse:{name:'MMSE',doms:[['時間定向',5],['地點定向',5],['記憶登錄',3],['注意力與計算',5],['延遲回憶',3],['命名',2],['複誦',1],['三步驟指令',3],['閱讀理解',1],['書寫',1],['臨摹圖形',1]],sample:[2,3,3,2,0,2,1,2,0,0,0]},
+  moca:{name:'MoCA',doms:[['視空間／執行功能',5],['命名',3],['注意力',6],['語言',3],['抽象思考',2],['延遲回憶',5],['定向',6]],sample:[2,2,3,1,1,0,3]}
+};
+const SC={type:'mmse',vals:{mmse:[...SCALES.mmse.sample],moca:[...SCALES.moca.sample]}};
+$('#sc-date').value=today;
+function buildDoms(){
+  const s=SCALES[SC.type],v=SC.vals[SC.type];
+  $('#sc-doms').innerHTML=s.doms.map((d,i)=>`<div class="dom"><div class="nm">${esc(d[0])}<small>/${d[1]}</small></div>
+    <div class="step"><button type="button" data-d="-1" data-i="${i}" aria-label="${esc(d[0])} 減 1">−</button><input type="number" id="dom-${SC.type}-${i}" data-i="${i}" min="0" max="${d[1]}" value="${v[i]}" aria-label="${esc(d[0])}得分"><button type="button" data-d="1" data-i="${i}" aria-label="${esc(d[0])} 加 1">+</button></div>
+    <div class="bar" id="bar-${i}"><i></i></div></div>`).join('');
+  $$('#sc-doms .step button').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i;setDom(i,SC.vals[SC.type][i]+ +b.dataset.d);}));
+  $$('#sc-doms input').forEach(inp=>inp.addEventListener('input',()=>setDom(+inp.dataset.i,parseInt(inp.value,10)||0,true)));
+  renderScale();
+}
+function setDom(i,val,fromInput){const max=SCALES[SC.type].doms[i][1];val=Math.max(0,Math.min(max,val));SC.vals[SC.type][i]=val;if(!fromInput)$('#dom-'+SC.type+'-'+i).value=val;$('#sc-sample').hidden=true;renderScale();}
+function scaleResult(){
+  const s=SCALES[SC.type],v=SC.vals[SC.type],edu=+$('#sc-edu').value||0;
+  let raw=v.reduce((a,b)=>a+b,0),total=raw,adj=0;
+  if(SC.type==='moca'&&edu<=12&&raw<30){adj=1;total=raw+1;}
+  let lvl,cls,lines=[];
+  if(SC.type==='mmse'){
+    const eduLv=edu===0?['未受教育',17]:edu<=6?['小學',20]:['國中以上',24];
+    const below=total<=eduLv[1];
+    lines.push(`教育校正切點（${eduLv[0]}）：≤ ${eduLv[1]} 分疑似認知障礙 → <b>${below?'低於切點':'高於切點'}</b>`);
+    if(total>=27){lvl='正常範圍';cls='go';}else if(total>=21){lvl='輕度';cls='warn';}else if(total>=10){lvl='中度';cls='warn';}else{lvl='重度';cls='stop';}
+    lines.push('嚴重度分級（已診斷失智者）：21–26 輕度、10–20 中度、&lt;10 重度（NICE）。');
+  }else{
+    if(adj)lines.push('受教育 ≤ 12 年，已加 1 分。');
+    if(total>=26){lvl='正常範圍';cls='go';}else if(total>=18){lvl='輕度認知障礙範圍';cls='warn';}else if(total>=10){lvl='中度障礙範圍';cls='warn';}else{lvl='重度障礙範圍';cls='stop';}
+    lines.push('原始切點 ≥ 26 為正常；台灣版常模切點較低，低教育者尤需依本土常模判讀。');
+  }
+  const weak=s.doms.map((d,i)=>[d[0],v[i]/d[1]]).filter(x=>x[1]<0.6).map(x=>x[0]);
+  return{total,raw,adj,lvl,cls,lines,weak,edu};
+}
+function renderScale(){
+  const s=SCALES[SC.type],v=SC.vals[SC.type],r=scaleResult();
+  s.doms.forEach((d,i)=>{const b=$('#bar-'+i);if(!b)return;const p=v[i]/d[1];b.firstElementChild.style.width=(p*100)+'%';b.classList.toggle('low',p<0.6);});
+  $('#sc-name').textContent=s.name+' 總分';$('#sc-total').textContent=r.total;
+  const ticks=SC.type==='mmse'?[10,21,27]:[10,18,26];
+  $('#sc-gauge').innerHTML=`<i style="left:${r.total/30*100}%"></i>`+ticks.map(t=>`<em style="left:${t/30*100}%">${t}</em>`).join('');
+  $('#sc-interp').innerHTML=`<div><span class="pill ${r.cls}">${r.lvl}</span></div>`+r.lines.map(l=>`<p class="small">${l}</p>`).join('')+
+    (r.weak.length?`<p class="small"><b>相對較弱的領域：</b>${r.weak.map(esc).join('、')}</p>`:'')+
+    `<p class="small muted">量表只是篩檢，失智症診斷需結合病史、日常功能與其他檢查。</p>`+
+    (SC.type==='moca'?'<p class="small muted">MoCA 需依官方規定取得授權與訓練認證後使用。</p>':'<p class="small muted">MMSE 版權屬 PAR Inc.，請使用授權版本。</p>');
+}
+segBind('#sc-type',v=>{SC.type=v;buildDoms();});
+$('#sc-edu').addEventListener('input',renderScale);
+$('#sc-clear').addEventListener('click',()=>{SC.vals[SC.type]=SC.vals[SC.type].map(()=>0);$('#sc-sample').hidden=true;buildDoms();});
+$('#sc-to-bpsd').addEventListener('click',()=>{const r=scaleResult();if(SC.type==='mmse'){B.mmse=r.total;$('#b-mmse').value=r.total;}else toast('MoCA 分數不直接換算 MMSE，請於 BPSD 頁手動輸入');renderBpsd();showTab('bpsd');if(SC.type==='mmse')toast('已帶入 MMSE '+r.total+' 分');});
+$('#sc-copy').addEventListener('click',()=>{const s=SCALES[SC.type],v=SC.vals[SC.type],r=scaleResult();copyText(`【${s.name}】${$('#sc-date').value} 總分 ${r.total}/30${r.adj?'（含教育加 1 分）':''}，受教育 ${r.edu} 年，${r.lvl}\n分項：${s.doms.map((d,i)=>`${d[0]} ${v[i]}/${d[1]}`).join('、')}`);});
+
+/* ================= 2. Diagnosis ================= */
+const CORE=['影響工作或日常活動的能力','相較於先前功能水準明顯退化','無法以譫妄或重大精神疾病解釋','經病人與知情者病史，加上客觀認知評估（床邊測驗或神經心理測驗）確認'];
+const DOMS=['學習與記住新資訊的能力受損（重複問題、忘記約定、在熟悉路線迷路）','推理與處理複雜事務能力受損、判斷力差（財務管理、決策）','視空間能力受損（無法辨認臉孔或常見物品）','語言功能受損（找字困難、說話或書寫錯誤）','人格、行為或舉止改變（情緒波動、淡漠、社交退縮、強迫行為）'];
+const ADF=['隱匿發病：數月至數年逐漸出現','有明確的認知惡化病史（報告或觀察）'];
+const ADEX=['明顯的腦血管疾病（中風病史與認知惡化時間相關，或影像有多發或廣泛梗塞）','路易氏體失智症核心特徵（波動性認知、視幻覺、巴金森症狀）','行為變異型額顳葉失智症的明顯特徵','語意型或非流暢型原發性漸進性失語症的明顯特徵','其他可能嚴重影響認知的神經疾病、內科疾病或藥物'];
+const CERT=['連續評估記錄到認知持續退化','帶有致病基因突變（APP、PSEN1、PSEN2）','生物標記支持（類澱粉 PET、腦脊髓液或血漿 p-tau 等）'];
+const LABS=['CBC','電解質與血鈣','血糖','肝腎功能','TSH','維生素 B12','梅毒血清','腦部 CT 或 MRI','憂鬱篩檢','用藥檢視'];
+const DXS={core:new Set([0,1,2,3]),dom:new Set([0,1]),ad:new Set([0,1]),ex:new Set(),cert:new Set([0]),labs:new Set([0,1,2,3,4,5,6,7])};
+function ckList(list,key,el){$(el).innerHTML=list.map((t,i)=>`<label class="check"><input type="checkbox" id="dx-${key}-${i}" data-k="${key}" data-i="${i}"${DXS[key].has(i)?' checked':''}><span>${esc(t)}</span></label>`).join('');}
+function buildDx(){
+  ckList(CORE,'core','#dx-core');ckList(DOMS,'dom','#dx-dom');ckList(ADF,'ad','#dx-ad');ckList(ADEX,'ex','#dx-ex');ckList(CERT,'cert','#dx-cert');
+  $('#dx-labs').innerHTML=LABS.map((t,i)=>`<label class="chip"><input type="checkbox" id="dx-labs-${i}" data-k="labs" data-i="${i}"${DXS.labs.has(i)?' checked':''}><span>${esc(t)}</span></label>`).join('');
+  $$('#dx input[data-k]').forEach(inp=>inp.addEventListener('change',()=>{const s=DXS[inp.dataset.k],i=+inp.dataset.i;inp.checked?s.add(i):s.delete(i);$('#dx-sample').hidden=true;renderDx();}));
+}
+$('#dx-cdr').value='1';
+function renderDx(){
+  const coreOk=DXS.core.size===4,domN=DXS.dom.size,dem=coreOk&&domN>=2;
+  $('#dx-dom-n').textContent=`已勾選 ${domN} / 5`;
+  let v,cls,rule,next=[];
+  if(!dem){
+    const mci=DXS.core.has(1)&&DXS.core.has(3)&&!DXS.core.has(0)&&domN>=1;
+    if(mci){v='輕度認知障礙 (MCI) 範圍';cls='warn';rule='有客觀認知退化，但日常功能大致保留。';next=['每 6–12 個月追蹤認知與功能','處理血管危險因子、聽力、憂鬱、睡眠，鼓勵運動與社交','完成可逆因素檢查'];}
+    else{v='尚未符合失智症';cls='warn';rule=coreOk?'受損認知領域少於兩個。':'核心條件未全部符合。';next=['確認知情者病史與日常功能','排除譫妄、憂鬱與藥物影響'];}
+  }else{
+    const atyp=!(DXS.ad.has(0)&&DXS.ad.has(1)),mixed=DXS.ex.size>0;
+    if(!atyp&&!mixed){v='很可能阿茲海默症失智';cls='go';rule=`符合失智症條件，隱匿發病且持續惡化，${({amn:'記憶型',lang:'語言型',vis:'視空間型',exe:'執行功能型'})[$('#dx-pres').value]}表現，無其他病因證據。`+(DXS.cert.size?`（${DXS.cert.size} 項增加確定性）`:'');
+      next=['開始或調整膽鹼酯酶抑制劑／memantine','評估 BPSD、照顧者負擔與安全（駕駛、用火、財務）','轉介長照資源與失智共同照護中心'];}
+    else{v='可能阿茲海默症失智';cls='warn';rule=(atyp?'病程不典型（突然發病或進展紀錄不足）':'')+(atyp&&mixed?'；':'')+(mixed?'合併其他病因證據（混合型表現）':'')+'。';
+      next=mixed?['依合併病因評估：血管性、路易氏體、額顳葉失智等','路易氏體特徵者避免一般抗精神病藥物']:['補充病程紀錄，6 個月後重新評估','考慮生物標記檢查'];}
+  }
+  const el=$('#dx-verdict');el.textContent=v;el.style.color=`var(--${cls})`;$('#dx-rule').textContent=rule;
+  const miss=LABS.filter((_,i)=>!DXS.labs.has(i));
+  if(miss.length)next.push('尚未完成：'+miss.join('、'));
+  $('#dx-next').innerHTML=`<span class="flabel">下一步</span><ul class="plain">${next.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`;
+  const cdr=$('#dx-cdr').value,map={'0':'正常','0.5':'可疑或極輕度失智','1':'輕度失智','2':'中度失智','3':'重度失智'};
+  $('#dx-stage').innerHTML=cdr===''?'':`<span class="pill ${cdr>=2?'stop':cdr>=1?'warn':'go'}">CDR ${cdr}：${map[cdr]}</span>`;
+}
+$('#dx-pres').addEventListener('change',renderDx);$('#dx-cdr').addEventListener('change',renderDx);
+
+/* ================= 3. BPSD ================= */
+const SYM=[['agit','激動／攻擊'],['psy','幻覺／妄想'],['dep','憂鬱'],['anx','焦慮'],['apa','淡漠'],['sleep','睡眠障礙／日夜顛倒']];
+const SYMN=Object.fromEntries(SYM);
+const RISKS=[['qtc','QTc 延長（男 >450、女 >470 ms）'],['cv','中風或心血管疾病'],['fall','跌倒或姿勢性低血壓'],['park','巴金森症狀'],['dm','糖尿病或代謝症候群'],['renal','腎功能不全']];
+const ACUTE=[
+ ['inf','感染','泌尿道、肺炎、皮膚或牙齒感染','尿液分析與培養、胸部 X 光、CBC 與 CRP；依感染源治療'],
+ ['pain','疼痛','關節炎、骨折、壓瘡、牙痛；可用 PAINAD 等觀察量表','規則給予 acetaminophen 做為止痛試驗，並處理疼痛來源'],
+ ['bowel','便秘或尿滯留','排便紀錄、膀胱超音波測餘尿','軟便劑或緩瀉劑；必要時導尿並檢視抗膽鹼藥物'],
+ ['meta','脫水、電解質或血糖異常','鈉、鈣、腎功能、血糖','補充水分，矯正電解質與血糖'],
+ ['drug','新藥或劑量改變','抗膽鹼藥、苯二氮平類、鴉片類、類固醇、抗組織胺','停用或減量可疑藥物，以 Beers 準則檢視用藥'],
+ ['delir','譫妄','急性發作、注意力不集中、意識波動；4AT 或 CAM 篩檢','依譫妄流程找出並治療病因；此時不適用 BPSD 流程'],
+ ['sense','視力或聽力障礙','眼鏡、助聽器是否配戴且正常運作','配戴並確認輔具功能'],
+ ['sleepd','睡眠剝奪','夜間照護干擾、日夜顛倒','減少夜間干擾，增加日間光照與活動'],
+ ['need','未滿足的需求','飢餓、口渴、如廁、無聊、孤單、冷熱','依需求調整作息與活動安排'],
+ ['env','環境或照顧者改變','住院、入住機構、搬家、照顧者更換','維持熟悉物品與固定照顧者，減少轉換'],
+ ['psyh','憂鬱或既有精神疾病','既往精神病史、近期情緒低落','評估並治療原發精神疾病'],
+ ['wd','酒精或藥物戒斷','近期停用酒精或苯二氮平類','依戒斷症候群處置']
+];
+const NP={
+ agit:['找出觸發因素並避開（噪音、人多、催促）','一次只給一個簡短指令，不爭辯、不糾正','轉移注意力，給予安撫與選擇權','個別化有意義活動（依過去職業與興趣）','音樂療法、按摩、寵物或懷舊治療','照顧者訓練：溝通技巧與壓力調適'],
+ psy:['不與幻覺或妄想爭辯，先回應情緒','確認是否為錯認：光線不足、鏡子或窗戶反射、電視聲音','增加照明、移除易引起錯覺的物品','藏物妄想：準備備份物品、固定擺放位置'],
+ dep:['愉快活動排程與規律運動','增加社交接觸與日間照顧參與','照顧者支持與衛教'],
+ anx:['固定作息與可預期的環境','減少過度刺激，陪伴與安撫','放鬆技巧、音樂'],
+ apa:['結構化、依過去興趣設計的活動','拆解成簡單步驟並給予提示','增加社交參與'],
+ sleep:['固定起床與就寢時間','白天光照與活動，限制午睡','傍晚後減少咖啡因與水分','夜間減少照護干擾，使用夜燈']
+};
+const NPCTX={care:['洗澡改在病人較平靜的時段，或改為擦澡','動作前先說明，給予遮蔽與保暖','讓病人參與可自行完成的步驟'],dusk:['下午增加光照，傍晚前拉上窗簾減少陰影','午後安排平靜活動，減少訪客與噪音'],night:['安排睡前如廁，走道設置夜燈','排除夜間疼痛、尿急與不寧腿']};
+const DRUG={
+ ris:{n:'Risperidone',s:'0.25 mg 睡前',t:'0.5–1 mg/日',m:'2 mg/日',k:'激動、攻擊與精神病症狀證據最多；錐體外症狀、中風風險'},
+ ari:{n:'Aripiprazole',s:'2 mg/日',t:'5–10 mg/日',m:'15 mg/日',k:'證據中等；靜坐不能、頭暈'},
+ brex:{n:'Brexpiprazole',s:'0.5 mg/日，一週後 1 mg',t:'2 mg/日',m:'3 mg/日',k:'美國 FDA 2023 核准用於阿茲海默症相關激動；台灣適應症與給付依最新資訊'},
+ que:{n:'Quetiapine',s:'12.5–25 mg 睡前',t:'25–150 mg/日',m:'200 mg/日',k:'療效證據弱；鎮靜、姿勢性低血壓、跌倒；錐體外症狀少'},
+ ola:{n:'Olanzapine',s:'2.5 mg/日',t:'5 mg/日',m:'10 mg/日',k:'抗膽鹼與代謝副作用，不列優先'},
+ hal:{n:'Haloperidol',s:'—',t:'—',m:'—',k:'除譫妄或緊急短期外不做為第一線（APA）'},
+ clz:{n:'Clozapine',s:'6.25–12.5 mg 睡前',t:'12.5–50 mg/日',m:'依反應',k:'路易氏體／巴金森病失智的難治精神病症狀；需監測嗜中性球'},
+ pim:{n:'Pimavanserin',s:'34 mg/日',t:'34 mg/日',m:'34 mg/日',k:'巴金森病精神病症狀（美國 FDA）；QT 延長；台灣可取得性依院內'},
+ cit:{n:'Citalopram',s:'10 mg/日',t:'20 mg/日',m:'20 mg/日（>60 歲）',k:'CitAD 試驗改善激動；QTc 延長，需心電圖'},
+ esc:{n:'Escitalopram',s:'5 mg/日',t:'5–10 mg/日',m:'10 mg/日',k:'QT 影響小於 citalopram'},
+ ser:{n:'Sertraline',s:'25 mg/日',t:'50–100 mg/日',m:'150 mg/日',k:'QT 影響小；腸胃不適、低血鈉'},
+ mir:{n:'Mirtazapine',s:'7.5 mg 睡前',t:'15–30 mg 睡前',m:'45 mg/日',k:'失眠、食慾差時可考慮；HTA-SADD 試驗未優於安慰劑'},
+ tra:{n:'Trazodone',s:'25 mg 睡前',t:'25–100 mg 睡前',m:'150 mg/日',k:'證據有限；姿勢性低血壓'},
+ apap:{n:'Acetaminophen 止痛試驗',s:'500 mg 每日 3–4 次',t:'規則給予 1–2 週',m:'3 g/日（高齡）',k:'階梯式止痛可降低激動（Husebo 2011）'},
+ ache:{n:'膽鹼酯酶抑制劑',s:'Rivastigmine 貼片 4.6 mg/24h 或 donepezil 5 mg',t:'9.5 mg/24h 或 10 mg',m:'—',k:'路易氏體／巴金森病失智之幻覺、淡漠有效；心搏過慢、暈厥'},
+ mph:{n:'Methylphenidate',s:'5 mg 早午各一次',t:'10 mg 早午各一次',m:'20 mg/日',k:'ADMET 2 試驗改善淡漠；監測血壓、心跳、食慾'},
+ bzd:{n:'Benzodiazepine',s:'—',t:'—',m:'—',k:'跌倒、譫妄、認知惡化；僅限極短期危機'},
+ vpa:{n:'Valproate',s:'—',t:'—',m:'—',k:'對激動無效且副作用多'}
+};
+const APS=new Set(['ris','ari','brex','que','ola','hal','clz','pim']);
+const B0=()=>({age:82,type:'ad',mmse:15,start:today,risks:new Set(),sym:new Set(['agit']),sev:3,ctx:'care',danger:true,distress:true,emerg:false,acute:Object.fromEntries(ACUTE.map(a=>[a[0],'ok'])),np:'fail'});
+let B=B0();
+
+function buildBpsd(){
+  $('#b-risks').innerHTML=RISKS.map(r=>`<label class="chip"><input type="checkbox" id="rk-${r[0]}" data-r="${r[0]}"><span>${esc(r[1])}</span></label>`).join('');
+  $('#b-sym').innerHTML=SYM.map(s=>`<label class="chip"><input type="checkbox" id="sy-${s[0]}" data-s="${s[0]}"><span>${esc(s[1])}</span></label>`).join('');
+  $('#acute').innerHTML=ACUTE.map(a=>`<div class="it"><div>${esc(a[1])}<small>${esc(a[2])}</small></div><div class="seg tri" data-a="${a[0]}" role="group" aria-label="${esc(a[1])}"><button data-v="" aria-pressed="false">未評估</button><button data-v="ok" aria-pressed="false">正常</button><button data-v="bad" aria-pressed="false">有問題</button></div></div>`).join('');
+  $$('#b-risks input').forEach(i=>i.addEventListener('change',()=>{i.checked?B.risks.add(i.dataset.r):B.risks.delete(i.dataset.r);touch();}));
+  $$('#b-sym input').forEach(i=>i.addEventListener('change',()=>{i.checked?B.sym.add(i.dataset.s):B.sym.delete(i.dataset.s);touch();}));
+  $$('#acute .seg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{B.acute[g.dataset.a]=b.dataset.v;touch();})));
+  segBind('#b-sev',v=>{B.sev=+v;touch();});segBind('#b-np',v=>{B.np=v;touch();});
+  $('#b-age').addEventListener('input',e=>{B.age=+e.target.value||0;touch();});
+  $('#b-mmse').addEventListener('input',e=>{B.mmse=e.target.value===''?null:+e.target.value;touch();});
+  $('#b-type').addEventListener('change',e=>{B.type=e.target.value;touch();});
+  $('#b-start').addEventListener('change',e=>{B.start=e.target.value||today;touch();});
+  $('#b-ctx').addEventListener('change',e=>{B.ctx=e.target.value;touch();});
+  ['danger','distress','emerg'].forEach(k=>$('#b-'+k).addEventListener('change',e=>{B[k]=e.target.checked;touch();}));
+  $('#acute-all').addEventListener('click',()=>{ACUTE.forEach(a=>{if(!B.acute[a[0]])B.acute[a[0]]='ok';});touch();});
+  $('#b-reset').addEventListener('click',()=>{B={...B0(),age:75,mmse:null,risks:new Set(),sym:new Set(),sev:0,ctx:'none',danger:false,distress:false,acute:Object.fromEntries(ACUTE.map(a=>[a[0],''])),np:''};$('#b-sample').hidden=true;fillBpsd();renderBpsd();});
+}
+function touch(){$('#b-sample').hidden=true;renderBpsd();}
+function fillBpsd(){
+  $('#b-age').value=B.age;$('#b-type').value=B.type;$('#b-mmse').value=B.mmse??'';$('#b-start').value=B.start;$('#b-ctx').value=B.ctx;
+  ['danger','distress','emerg'].forEach(k=>$('#b-'+k).checked=B[k]);
+  RISKS.forEach(r=>$('#rk-'+r[0]).checked=B.risks.has(r[0]));SYM.forEach(s=>$('#sy-'+s[0]).checked=B.sym.has(s[0]));
+  segSet('#b-sev',B.sev);segSet('#b-np',B.np);
+}
+function stageOf(m){if(m==null||m==='')return'';return m>=21?'輕度':m>=10?'中度':'重度';}
+
+/* drug choice engine */
+function choose(sym){
+  const t=B.type,lewy=t==='dlb'||t==='pdd',ftd=t==='ftd',R=B.risks,severe=B.sev===3||B.danger||B.emerg,o=[];
+  const add=(k,lv,why)=>{if(o.some(x=>x.k===k))return;o.push({k,lv,why:why||''});};
+  if(sym==='agit'){
+    if(lewy){add('ache','first','路易氏體／巴金森病失智先最佳化膽鹼酯酶抑制劑');add('que','alt','必須用抗精神病藥時選低劑量 quetiapine');add('clz','alt','難治者');add('ris','avoid','對抗精神病藥極度敏感');add('hal','avoid','可能引發嚴重僵硬與意識混亂');}
+    else if(ftd){add('ser','first','去抑制、激動可先試 SSRI');add('tra','alt','睡眠與激動');if(severe)add('que','alt','嚴重且危險時短期使用');add('ache','avoid','額顳葉失智無效且可能加重');}
+    else{
+      if(severe){
+        if(R.has('park')){add('que','first','有巴金森症狀，選錐體外症狀少的藥物');add('ari','alt');}
+        else{add('ris','first','證據最多；從 0.25 mg 開始');add('ari','alt','錐體外症狀或中風疑慮時的替代');add('brex','alt','依可取得性');add('que','alt','療效較弱，適合合併巴金森症狀者');}
+        if(!B.emerg)add('cit','alt','非緊急時可先試，需 4–8 週起效');
+      }else{
+        add('apap','first','疼痛常被低估，先做止痛試驗');
+        add('cit','first','中度激動、無緊急危險時的非抗精神病藥選項');add('ser','alt','QTc 疑慮時');add('esc','alt');
+      }
+      add('ola','avoid','抗膽鹼與代謝副作用');add('hal','avoid','非譫妄時不做為第一線');
+    }
+    add('bzd','avoid');add('vpa','avoid');
+  }
+  if(sym==='psy'){
+    if(lewy){add('ache','first','幻覺先以膽鹼酯酶抑制劑治療');add('que','alt','低劑量');add('clz','alt','難治者；監測嗜中性球');add('pim','alt','依可取得性');add('ris','avoid','抗精神病藥敏感');add('hal','avoid');}
+    else if(!(B.distress||B.danger)){add('none','first','幻覺或妄想未造成痛苦或危險時不需用藥，以安撫與環境調整為主');}
+    else{if(R.has('park'))add('que','first','有巴金森症狀');else add('ris','first','證據最多');add('ari','alt');add('que','alt');add('hal','avoid','非譫妄時不做為第一線');}
+  }
+  if(sym==='dep'){add('ser','first','QT 影響小');add('esc','alt');add('mir','alt','合併失眠或食慾差時');add('none2','alt','失智症憂鬱的藥物證據有限，以非藥物介入為基礎；有自殺意念轉介精神科');}
+  if(sym==='anx'){add('ser','alt','持續且影響生活時');add('esc','alt');add('bzd','avoid');}
+  if(sym==='apa'){add('mph','alt','無心血管禁忌時可考慮');add('ache','alt','尚未使用者');add('ris','avoid','抗精神病藥可能加重淡漠');}
+  if(sym==='sleep'){add('tra','alt','低劑量睡前');add('mir','alt','合併憂鬱時');add('bzd','avoid','包括 Z-drug（zolpidem 等）');add('que','avoid','不單純為了睡眠使用抗精神病藥');}
+  /* risk modifiers */
+  o.forEach(x=>{
+    const w=[];
+    if(R.has('qtc')&&['cit','esc','pim','que','ris','ari'].includes(x.k)){if(x.k==='cit'||x.k==='esc'||x.k==='pim'){x.lv='avoid';w.push('QTc 延長');}else w.push('QTc 延長需心電圖追蹤');}
+    if(R.has('cv')&&['ris','ola','que','ari','brex'].includes(x.k))w.push('腦血管事件風險增加');
+    if(R.has('fall')&&['que','tra','mir','cit','ser','esc'].includes(x.k))w.push('跌倒與姿勢性低血壓風險');
+    if(R.has('park')&&['ris','hal','ola','ari','brex'].includes(x.k)){if(x.lv==='first')x.lv='alt';w.push('可能加重巴金森症狀');}
+    if(R.has('dm')&&['ola','que'].includes(x.k))w.push('血糖與代謝副作用');
+    if(R.has('renal')&&x.k==='ris')w.push('腎功能不全起始 0.25 mg、緩慢調整');
+    if(w.length)x.why=(x.why?x.why+'；':'')+'注意：'+w.join('、');
+  });
+  const rank={first:0,alt:1,avoid:2};o.sort((a,b)=>rank[a.lv]-rank[b.lv]);
+  return o;
+}
+
+function gateState(){
+  const acuteVals=Object.values(B.acute),bad=ACUTE.filter(a=>B.acute[a[0]]==='bad'),unk=acuteVals.filter(v=>!v).length;
+  const n1=B.sym.size>0&&B.sev>0;
+  const n2=unk===0&&bad.length===0;
+  const n3=B.np==='fail'||B.np==='ok';
+  const sevOk=B.sev===3||B.danger||B.distress;
+  const drug=n1&&sevOk&&((n2&&B.np==='fail')||B.emerg);
+  return{bad,unk,n1,n2,n3,sevOk,drug,delir:B.acute.delir==='bad'};
+}
+
+function renderBpsd(){
+  const g=gateState();
+  $('#b-stage').textContent=stageOf(B.mmse)?stageOf(B.mmse)+'失智':'';
+  /* acute seg state */
+  $$('#acute .seg').forEach(s=>segSet('#acute .seg[data-a="'+s.dataset.a+'"]',B.acute[s.dataset.a]));
+  /* node 1 */
+  const st=(id,cls,txt)=>{$('#n'+id).className='node '+cls;const s=$('#s'+id);s.textContent=txt;s.style.color=`var(--${cls==='done'?'go':cls==='blocked'?'stop':cls==='active'?'accent':'ink-3'})`;};
+  st(1,g.n1?'done':'active',g.n1?`${[...B.sym].map(k=>SYMN[k]).join('、')}・${['','輕度','中度','重度'][B.sev]}`:'請選擇症狀與嚴重度');
+  /* node 2 */
+  $('#acute-out').innerHTML=g.bad.length?`<div class="alert stop"><strong>${g.delir?'疑似譫妄：先依譫妄流程處置':'先處理已發現的原因，暫緩精神藥物'}</strong><ul class="plain small">${g.bad.map(a=>`<li><b>${esc(a[1])}</b>：${esc(a[3])}</li>`).join('')}</ul><span class="small">處理後 1–2 週重新評估行為症狀。</span></div>`
+    :g.unk?`<p class="small muted">尚有 ${g.unk} 項未評估。</p>`:'<div class="alert go"><strong>未發現急性或可逆原因</strong></div>';
+  st(2,!g.n1?'idle':g.bad.length?'blocked':g.unk?'active':'done',g.bad.length?`${g.bad.length} 項有問題`:g.unk?`${12-g.unk} / 12 已評估`:'已排除');
+  /* node 3 */
+  const npItems=[...B.sym].flatMap(s=>NP[s].map(t=>[SYMN[s],t]));
+  const ctxItems=(NPCTX[B.ctx]||[]).map(t=>['情境',t]);
+  const grouped={};[...npItems,...ctxItems].forEach(([k,t])=>{(grouped[k]=grouped[k]||[]).push(t);});
+  $('#np-list').innerHTML=Object.keys(grouped).length?Object.entries(grouped).map(([k,ts])=>`<div style="margin-top:8px"><span class="flabel">${esc(k==='情境'?'針對發生情境':k)}</span><ul class="plain">${ts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join(''):'<p class="small muted">選擇目標症狀後，這裡會列出對應的非藥物介入。</p>';
+  st(3,!g.n2&&!B.emerg?'idle':B.np==='ok'?'done':B.np==='fail'?'done':'active',B.np==='ok'?'有效，持續執行':B.np==='fail'?'效果不足':B.np==='ongoing'?'進行中，建議 2–4 週後評估':'尚未開始');
+  /* node 4 */
+  const L=[[g.n1,'已界定目標症狀與嚴重度'],[g.sevOk,'症狀嚴重、具危險性或造成病人明顯痛苦'],[g.n2||B.emerg,'已排除急性與可逆原因'+(B.emerg&&!g.n2?'（緊急狀況先行處置）':'')],[B.np==='fail'||B.emerg,'非藥物介入已執行但效果不足'+(B.emerg&&B.np!=='fail'?'（緊急狀況）':'')]];
+  $('#gate').innerHTML=L.map(([ok,t])=>`<div class="${ok?'y':'n'}"><i>${ok?'✓':'✗'}</i><span>${esc(t)}</span></div>`).join('');
+  let gOut;
+  if(B.np==='ok')gOut='<div class="alert go"><strong>不需要藥物</strong><span class="small">非藥物介入有效，持續執行並定期評估。</span></div>';
+  else if(g.drug)gOut=`<div class="alert warn"><strong>符合藥物治療條件${B.emerg?'（緊急）':''}</strong><span class="small">用藥前與病人或家屬討論風險與效益，並記錄於病歷。${B.emerg?'緊急處置後仍需回到步驟 2、3。':''}</span></div>`;
+  else if(g.n1&&!g.sevOk)gOut='<div class="alert go"><strong>目前不建議藥物</strong><span class="small">症狀未達嚴重、危險或明顯痛苦，以非藥物介入為主。</span></div>';
+  else gOut='<div class="alert stop"><strong>尚未符合藥物治療條件</strong><span class="small">完成上方未打勾的步驟後再評估。</span></div>';
+  $('#gate-out').innerHTML=gOut;
+  st(4,!g.n1?'idle':g.drug?'done':B.np==='ok'?'done':'blocked',g.drug?'可考慮藥物':B.np==='ok'?'不需藥物':'未通過');
+  /* node 5 */
+  const syms=[...B.sym];
+  const rxHTML=syms.map(s=>{const opts=choose(s);return`<div class="rx"><h3 style="font-size:15.5px">${esc(SYMN[s])}</h3>${opts.map(x=>{
+    if(x.k==='none'||x.k==='none2')return`<div class="opt ${x.lv}"><div class="t">${x.k==='none'?'不需要藥物':'證據提醒'}</div><div class="d">${esc(x.why)}</div></div>`;
+    const d=DRUG[x.k],lab=x.lv==='first'?'<span class="pill go">優先</span>':x.lv==='alt'?'<span class="pill ev">替代</span>':'<span class="pill stop">避免</span>';
+    const dose=x.lv==='avoid'||d.s==='—'?'':`<div class="dose">起始 ${esc(d.s)}・目標 ${esc(d.t)}・上限 ${esc(d.m)}</div>`;
+    return`<div class="opt ${x.lv}"><div class="t">${esc(d.n)} ${lab}${APS.has(x.k)&&x.lv!=='avoid'?'<span class="pill warn">黑框警語</span>':''}</div>${dose}<div class="d">${esc(x.why||d.k)}${x.why&&x.lv!=='avoid'?'。'+esc(d.k):''}</div></div>`;}).join('')}</div>`;}).join('');
+  $('#rx').innerHTML=(g.drug?'':'<p class="small muted" style="margin-bottom:6px">尚未通過步驟 4，以下選項僅供參考。</p>')+(rxHTML||'<p class="small muted">選擇目標症狀後顯示。</p>');
+  st(5,g.drug?'active':'idle',g.drug?'依優先順序選擇':'待步驟 4');
+  /* node 6 */
+  const first=syms.map(s=>{const x=choose(s).find(x=>x.lv==='first'&&DRUG[x.k]);return x?{...x,sym:s}:null;}).filter(Boolean);
+  const useAP=g.drug&&first.some(x=>APS.has(x.k)),useSSRI=g.drug&&first.some(x=>['cit','esc','ser','mir'].includes(x.k));
+  const base=new Date((B.start||today)+'T00:00:00');
+  const add=d=>{const x=new Date(base);x.setDate(x.getDate()+d);return iso(x);};
+  const TL=[];
+  TL.push([0,'基準評估',`量化症狀（NPI-Q 或 CMAI）${useAP||useSSRI?'、心電圖 QTc':''}${useAP?'、體重、血糖與血脂、錐體外症狀與跌倒風險':''}；記錄與家屬討論的內容。`]);
+  if(!g.drug){TL.push([14,'非藥物介入追蹤','照顧者回報執行情形，調整策略。']);TL.push([28,'重新評估','比較基準症狀；若仍嚴重且危險，回到步驟 4。']);}
+  else{
+    TL.push([7,'副作用檢查','鎮靜、跌倒、姿勢性低血壓'+(useAP?'、錐體外症狀':'')+'；可耐受時逐步調整劑量。']);
+    if(useAP){TL.push([28,'療效判斷（APA）','適當劑量 4 週仍無明顯改善 → 漸減並停藥；有效則維持最低有效劑量。']);TL.push([120,'嘗試漸減','有效者 4 個月內嘗試減量（過去減量曾復發者除外），減量期間每月評估復發。']);}
+    if(useSSRI){TL.push([28,'SSRI 初步評估','抗激動或抗憂鬱效果需 4–8 週；citalopram 追蹤心電圖與低血鈉。']);TL.push([56,'SSRI 療效判斷','無效則換藥或停藥。']);}
+    if(!useAP&&!useSSRI)TL.push([14,'療效評估','依症狀量表比較基準。']);
+  }
+  TL.sort((a,b)=>a[0]-b[0]);
+  $('#tl').innerHTML=TL.map(([d,t,p])=>`<div class="tl"><div class="when">${add(d)}<small>${d===0?'第 0 天':d>=28&&d%28===0?`第 ${d/7} 週`:d===120?'第 4 個月':`第 ${d} 天`}</small></div><div><b>${esc(t)}</b><p>${esc(p)}</p></div></div>`).join('');
+  st(6,g.drug?'active':g.n1?'active':'idle',g.drug?'用藥監測':'追蹤');
+  /* aside */
+  const P=[['症狀界定',g.n1],['排除可逆原因',g.n2],['非藥物介入',B.np==='fail'||B.np==='ok'],['藥物閘門',g.drug]];
+  $('#path').innerHTML=P.map(([t,ok],i)=>`<div><span>${i+1}. ${t}</span><span class="pill ${ok?'go':'warn'}">${ok?'完成':'未完成'}</span></div>`).join('');
+  let plan;
+  if(g.bad.length)plan=`<div class="alert stop"><strong>先處理：${g.bad.map(a=>esc(a[1])).join('、')}</strong><span class="small">暫緩精神藥物，處理後重新評估。</span></div>`;
+  else if(B.np==='ok')plan='<div class="alert go"><strong>持續非藥物介入</strong></div>';
+  else if(g.drug&&first.length)plan=first.map(x=>{const d=DRUG[x.k];return`<div class="opt first"><div class="t">${esc(SYMN[x.sym])}：${esc(d.n)}</div><div class="dose">起始 ${esc(d.s)}・目標 ${esc(d.t)}</div></div>`;}).join('')+'<p class="small muted" style="margin-top:8px">並持續非藥物介入。</p>';
+  else if(g.drug)plan='<p class="small">依步驟 5 選擇。</p>';
+  else plan='<div class="alert warn"><strong>以非藥物介入為主</strong><span class="small">完成步驟 1–3 後再評估是否需要藥物。</span></div>';
+  $('#plan').innerHTML=plan;
+  window.__first=first;
+}
+$('#b-copy').addEventListener('click',()=>{
+  const g=gateState(),first=window.__first||[];
+  const L=[`【失智症 BPSD 評估】${B.age} 歲，${$('#b-type').selectedOptions[0].text}${B.mmse!=null?`，MMSE ${B.mmse}（${stageOf(B.mmse)}）`:''}`];
+  L.push(`目標症狀：${[...B.sym].map(k=>SYMN[k]).join('、')||'未選'}；嚴重度 ${['未評','輕度','中度','重度'][B.sev]}${B.danger?'；具危險性':''}${B.distress?'；造成病人痛苦':''}`);
+  L.push(`可逆原因：${g.bad.length?'發現 '+g.bad.map(a=>a[1]).join('、'):g.unk?`${g.unk} 項未評估`:'已排除感染、疼痛、便秘、代謝、藥物、譫妄等'}`);
+  L.push(`非藥物介入：${({none:'尚未開始',ongoing:'進行中',fail:'已執行但效果不足',ok:'有效'})[B.np]||'未記錄'}`);
+  if(g.drug&&first.length)L.push(`藥物：${first.map(x=>`${DRUG[x.k].n} 起始 ${DRUG[x.k].s}，目標 ${DRUG[x.k].t}`).join('；')}`);
+  if(g.drug&&first.some(x=>APS.has(x.k)))L.push('已與家屬說明抗精神病藥物黑框警語（死亡率、中風風險）。4 週評估療效，4 個月內嘗試減量。');
+  L.push('依據：APA 2016 抗精神病藥物用於失智症指引、DICE 模式。');
+  copyText(L.join('\n'));
+});
+
+/* ================= 4. Drug table ================= */
+$('#drugtbl tbody').innerHTML=['ris','ari','brex','que','ola','hal','clz','pim','cit','esc','ser','mir','tra','apap','mph'].map(k=>{const d=DRUG[k];return`<tr><td><b>${esc(d.n)}</b></td><td class="mono">${esc(d.s)}</td><td class="mono">${esc(d.t)}</td><td class="mono">${esc(d.m)}</td><td class="small">${esc(d.k)}</td></tr>`;}).join('');
+
+/* ---------- init ---------- */
+buildDoms();buildDx();renderDx();buildBpsd();fillBpsd();renderBpsd();
+let start='bpsd';const h=(location.hash||'').slice(1);
+if(TABS.includes(h))start=h;else{try{const s=localStorage.getItem('dem-tab');if(TABS.includes(s))start=s;}catch(e){}}
+showTab(start);
+})();
+</script>
+</body>
+</html>
