@@ -9,7 +9,14 @@
 1. **認知量表計分**：輸入 MMSE 或 MoCA 各分項得分，自動加總、做教育校正與嚴重度判讀，並顯示各認知領域的表現。結果可直接帶入 BPSD 流程。
 2. **診斷與分期**：NIA-AA 2011 失智症與阿茲海默症臨床診斷標準檢核、可逆因素檢查、CDR 分期。
 3. **BPSD 處置流程**：界定目標症狀 → 排除感染、疼痛等急性與可逆原因 → 非藥物介入（DICE）→ 藥物閘門 → 依症狀、失智類型與風險因子選擇藥物與劑量 → 依 APA 指引產生含日期的監測與減量時程。
-4. **藥物速查與文獻**。
+4. **藥物速查與文獻**：含健保第一節 1.3.3 失智症用藥條件（115.8.21 版）。
+5. **示範病例**：6 個虛構病例，工具結果即時計算，可帶入量表、診斷或 BPSD 分頁。
+6. **考題**：20 題（基礎 10、高階 10），固定選項順序，作答不儲存。
+7. **心智圖**：診斷評估與照護治療兩側，可展開。
+
+## 測試
+
+`node tests.cjs`：規則、病例、考題與頁面連接（規則在 `/*ENGINE-START*/`，教學內容在 `/*TEACH-START*/`）。
 
 ## 量表版權
 
@@ -21,6 +28,8 @@ MMSE（PAR Inc.）與 MoCA 皆為受版權保護的量表。本網頁不重製�
 - Jack CR Jr, et al. Revised criteria for diagnosis and staging of AD. *Alzheimers Dement* 2024.
 - Reus VI, et al. APA practice guideline on the use of antipsychotics to treat agitation or psychosis in patients with dementia. *Am J Psychiatry* 2016.
 - Kales HC, Gitlin LN, Lyketsos CG. DICE approach. *J Am Geriatr Soc* 2014；*BMJ* 2015.
+
+APA 2016 原文網站無法開啟，相關時點依 JCMA 2026 台灣共識的轉述核對；各試驗多為摘要層級，出處列於病例與考題。
 
 ## 免責聲明
 
